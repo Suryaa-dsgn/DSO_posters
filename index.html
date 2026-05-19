@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quickflows.ai — AI-Powered Workflow Automation for Dental Practices &amp; DSOs</title>
+
+  <!-- Preload main poster only — sub-posters load on demand -->
+  <link rel="preload" as="image" href="images/main-poster.webp" />
+
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -157,7 +161,7 @@
       background: rgba(255, 255, 255, 0.16);
     }
 
-    /* ── MODAL POSTER ── */
+    /* ── MODAL POSTER WRAP ── */
 
     .modal-poster-wrap {
       position: relative;
@@ -166,6 +170,29 @@
       overflow: hidden;
       background: #080814;
       box-shadow: 0 0 0 0.5px rgba(124, 58, 237, 0.3);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Spinner — visible while image is loading */
+    .modal-poster-wrap.loading::after {
+      content: '';
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(124, 58, 237, 0.2);
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .modal-poster-wrap.loading .modal-poster-img {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .modal-poster-img {
@@ -187,7 +214,7 @@
       border-radius: 8px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: background 0.18s ease, box-shadow 0.18s ease;
+      transition: background 0.18s ease;
     }
 
     .modal-cta-zone:hover {
@@ -204,13 +231,13 @@
   <!-- MAIN POSTER -->
   <div class="poster-container">
     <img
-      src="images/main-poster.png"
+      src="images/main-poster.webp"
       alt="Quickflows.ai — AI-Powered Workflow Automation for Dental Practices and DSOs"
       class="poster-img"
     />
 
     <!-- CARD OVERLAY ZONES (6 total) -->
-    <!-- Row 1 — measured top:31%, ends at ~49% -->
+    <!-- Row 1 -->
     <div class="zone" data-poster="scheduling"
       role="button" tabindex="0"
       aria-label="Open Appointment Scheduling and Chair Optimization"
@@ -229,7 +256,7 @@
       style="top:31%; left:67%; width:31%; height:18%;">
     </div>
 
-    <!-- Row 2 — measured top:50%, ends at ~66% -->
+    <!-- Row 2 -->
     <div class="zone" data-poster="revenue"
       role="button" tabindex="0"
       aria-label="Open Revenue Cycle and Claims Intelligence"
@@ -248,7 +275,7 @@
       style="top:50%; left:67%; width:31%; height:16%;">
     </div>
 
-    <!-- DEMO CTA ZONE — pixel-scanned: left:46%, width:36%, top:94%, height:3.5% -->
+    <!-- DEMO CTA ZONE -->
     <a class="zone demo-zone"
       href="mailto:K.mcdonnell@quickflows.ai?subject=DSO%20Demo%20Request%20%E2%80%94%20Quickflows.ai"
       aria-label="Schedule a demo — opens email"
@@ -265,7 +292,7 @@
         <button class="btn-close" onclick="closeModal()" aria-label="Close">&#x2715;</button>
       </div>
 
-      <div class="modal-poster-wrap">
+      <div class="modal-poster-wrap loading" id="poster-wrap">
         <img src="" alt="" class="modal-poster-img" id="modal-img" />
         <a class="modal-cta-zone"
           href="mailto:K.mcdonnell@quickflows.ai?subject=DSO%20Demo%20Request%20%E2%80%94%20Quickflows.ai"
@@ -278,21 +305,34 @@
 
   <script>
     const POSTERS = {
-      'scheduling': { src: 'images/scheduling.png', alt: 'Appointment Scheduling & Chair Optimization' },
-      'insurance':  { src: 'images/insurance.png',  alt: 'Insurance Verification & Prior Authorization' },
-      'intake':     { src: 'images/intake.png',     alt: 'Patient Intake & Documentation' },
-      'revenue':    { src: 'images/revenue.png',    alt: 'Revenue Cycle & Claims Intelligence' },
-      'treatment':  { src: 'images/treatment.png',  alt: 'Treatment Plan Follow-Up & Acceptance' },
-      'staffing':   { src: 'images/staffing.png',   alt: 'Staffing & Operational Intelligence' },
+      'scheduling': { src: 'images/scheduling.webp', alt: 'Appointment Scheduling & Chair Optimization' },
+      'insurance':  { src: 'images/insurance.webp',  alt: 'Insurance Verification & Prior Authorization' },
+      'intake':     { src: 'images/intake.webp',     alt: 'Patient Intake & Documentation' },
+      'revenue':    { src: 'images/revenue.webp',    alt: 'Revenue Cycle & Claims Intelligence' },
+      'treatment':  { src: 'images/treatment.webp',  alt: 'Treatment Plan Follow-Up & Acceptance' },
+      'staffing':   { src: 'images/staffing.webp',   alt: 'Staffing & Operational Intelligence' },
     };
 
-    const modal    = document.getElementById('modal');
-    const modalImg = document.getElementById('modal-img');
-    const modalBox = document.getElementById('modal-box');
+    const modal      = document.getElementById('modal');
+    const modalImg   = document.getElementById('modal-img');
+    const modalBox   = document.getElementById('modal-box');
+    const posterWrap = document.getElementById('poster-wrap');
 
     function openModal(id) {
       const p = POSTERS[id];
       if (!p) return;
+
+      // Show spinner while image loads
+      posterWrap.classList.add('loading');
+
+      modalImg.onload = function() {
+        posterWrap.classList.remove('loading');
+      };
+
+      modalImg.onerror = function() {
+        posterWrap.classList.remove('loading');
+      };
+
       modalImg.src = p.src;
       modalImg.alt = p.alt;
       modal.classList.add('open');
@@ -305,7 +345,10 @@
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      setTimeout(function() { modalImg.src = ''; }, 280);
+      setTimeout(function() {
+        modalImg.src = '';
+        posterWrap.classList.remove('loading');
+      }, 280);
     }
 
     // Zone clicks + keyboard support
@@ -319,12 +362,12 @@
       });
     });
 
-    // Close on backdrop click
+    // Close on backdrop click (outside modal box)
     modal.addEventListener('click', function(e) {
       if (!modalBox.contains(e.target)) closeModal();
     });
 
-    // Close on Escape
+    // Close on Escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
     });
